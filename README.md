@@ -39,7 +39,7 @@ This project demonstrates a complete **RESTful API** implementation with persist
     Go to `http://localhost:8080`
 
 ## 📸 Screenshots
-![My Expense Tracker Dashboard](screenshots/dashboard.png)
+![My Expense Tracker Dashboard](screenshots/dashboard(frontend).png)
 
 ## 🔮 Future Improvements
 
