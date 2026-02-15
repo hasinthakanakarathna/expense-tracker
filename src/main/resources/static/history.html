@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Expense History</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+        h1 { color: #2c3e50; text-align: center; }
+
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #3498db; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: #7f8c8d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .back-btn:hover { background-color: #95a5a6; }
+    </style>
+</head>
+<body>
+
+<a href="/" class="back-btn">← Back to Today</a>
+
+<h1>📜 Full Expense History</h1>
+
+<table id="history-table">
+    <thead>
+    <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Category</th>
+        <th>Amount</th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script>
+    // Run immediately when page loads
+    fetch('/api/expenses/all')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.querySelector('#history-table tbody');
+
+            // Sort data: Newest first
+            data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            data.forEach(expense => {
+                const row = document.createElement('tr');
+
+                // Handle missing dates (for old data)
+                const dateDisplay = expense.date ? expense.date : "Older Entry";
+
+                row.innerHTML = `
+                        <td>${dateDisplay}</td>
+                        <td>${expense.description}</td>
+                        <td>${expense.category}</td>
+                        <td style="font-weight:bold;">$${expense.amount}</td>
+                    `;
+                tableBody.appendChild(row);
+            });
+        });
+</script>
+
+</body>
+</html>

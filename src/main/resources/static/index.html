@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Expense Tracker</title>
+    <style>
+        /* 1. Reset and Body Styling */
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            display: flex;             /* Enables Flexbox */
+            justify-content: center;   /* Centers horizontally */
+            min-height: 100vh;         /* Full screen height */
+        }
+
+        /* 2. Main Container Card */
+        .container {
+            width: 100%;
+            max-width: 600px;         /* Limits width on big screens */
+            background: transparent;
+            padding: 40px 20px;       /* Spacing from top/bottom */
+            display: flex;
+            flex-direction: column;   /* Stack items vertically */
+            align-items: center;      /* Center items inside the card */
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;       /* Forces text to center */
+            margin-bottom: 20px;
+            font-size: 2.5rem;        /* Make it nice and big */
+            width: 100%;
+        }
+
+        /* 3. Total Box */
+        .total-box {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            width: 100%;              /* Fill container width */
+            box-sizing: border-box;   /* Ensure padding doesn't break width */
+        }
+        .total-box h2 { margin: 0; font-size: 2.5em; }
+        .total-box p { margin: 0; opacity: 0.8; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* 4. Input Form */
+        .input-group {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        input, select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            flex-grow: 1;
+            outline: none;
+            font-size: 1rem;
+        }
+        button {
+            padding: 12px 25px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        button:hover { background: #219150; transform: translateY(-1px); }
+
+        /* Error Style */
+        .error { border: 2px solid #e74c3c !important; background-color: #fadbd8; }
+
+        /* 5. List Styling */
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+            width: 100%;
+        }
+        li {
+            background: white;
+            border-bottom: 1px solid #eee;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        li:first-child { border-top-left-radius: 8px; border-top-right-radius: 8px; }
+        li:last-child { border-bottom: none; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+
+        span.amount { font-weight: bold; color: #c0392b; font-size: 1.1em; }
+        .delete-btn { color: #e74c3c; font-weight: bold; cursor: pointer; margin-left: 15px; padding: 5px 10px; }
+        .delete-btn:hover { background: #fadbd8; border-radius: 4px; }
+
+        .nav-links { margin-top: 25px; }
+        .nav-links a { color: #3498db; text-decoration: none; font-weight: bold; font-size: 1.1rem; }
+        .nav-links a:hover { text-decoration: underline; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>💰 Expense Tracker</h1>
+
+    <div class="total-box">
+        <p>Spent Today</p>
+        <h2 id="total-display">$0.00</h2>
+    </div>
+
+    <div class="input-group">
+        <input type="text" id="desc" placeholder="Description" oninput="clearError(this)">
+        <input type="number" id="amount" placeholder="Amount" step="0.01" oninput="clearError(this)">
+        <select id="category">
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Utilities">Utilities</option>
+            <option value="Health">Health</option>
+            <option value="Cigarettes">Cigarettes</option>
+            <option value="Other">Other</option>
+        </select>
+        <button onclick="addExpense()">Add</button>
+    </div>
+
+    <ul id="expense-list">
+        <li>Loading data...</li>
+    </ul>
+
+    <div class="nav-links">
+        <a href="/history.html">View Full History ➜</a>
+    </div>
+
+</div>
+
+<script>
+    const API_URL = '/api/expenses';
+
+    async function loadExpenses() {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        const list = document.getElementById('expense-list');
+        list.innerHTML = '';
+        let totalAmount = 0;
+
+        if (data.length === 0) {
+            list.innerHTML = '<li style="color:#777; justify-content:center;">No expenses today.</li>';
+            document.getElementById('total-display').innerText = "$0.00";
+            return;
+        }
+
+        data.forEach(expense => {
+            totalAmount += expense.amount;
+            const item = document.createElement('li');
+            item.innerHTML = `
+                    <div>
+                        <span>${expense.description} <small style="color:#7f8c8d">(${expense.category})</small></span>
+                    </div>
+                    <div style="display:flex; align-items:center;">
+                        <span class="amount">-$${expense.amount.toFixed(2)}</span>
+                        <span class="delete-btn" onclick="deleteExpense(${expense.id})">✕</span>
+                    </div>
+                `;
+            list.appendChild(item);
+        });
+        document.getElementById('total-display').innerText = "$" + totalAmount.toFixed(2);
+    }
+
+    async function addExpense() {
+        const descInput = document.getElementById('desc');
+        const amountInput = document.getElementById('amount');
+        const categoryInput = document.getElementById('category');
+
+        let isValid = true;
+        if (!descInput.value.trim()) {
+            descInput.classList.add('error');
+            descInput.placeholder = "Required!";
+            isValid = false;
+        }
+        if (!amountInput.value || amountInput.value <= 0) {
+            amountInput.classList.add('error');
+            isValid = false;
+        }
+
+        if (!isValid) return;
+
+        await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                description: descInput.value,
+                amount: amountInput.value,
+                category: categoryInput.value
+            })
+        });
+
+        descInput.value = '';
+        amountInput.value = '';
+        descInput.placeholder = "Description";
+        loadExpenses();
+    }
+
+    async function deleteExpense(id) {
+        if(!confirm("Delete this expense?")) return;
+        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        loadExpenses();
+    }
+
+    function clearError(inputElement) {
+        if (inputElement.classList.contains('error')) {
+            inputElement.classList.remove('error');
+            if(inputElement.id === 'desc') inputElement.placeholder = "Description";
+        }
+    }
+
+    loadExpenses();
+</script>
+
+</body>
+</html>
